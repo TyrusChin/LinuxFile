@@ -1,0 +1,14 @@
+遇到的问题是：
+Author: tyruschin <tyruschin@foxmail.com>
+Date:   Thu Dec 10 20:38:33 2015 +0800
+
+    <E6><9C><80><E5><88><9D><E7><9A><84>sql<E6><96><87><E4><BB><B6><EF><BC><8C><E9><9C><80><E8><A6><81><E5><88><A0><E5><87><8F><E8><A1><A8>
+
+在git log中出现中文的unicode乱码，后来得知git log采用的是less命令的显示方法，于是尝试使用less filename来查看含有中文的文件，发现果然是有问题的。
+
+解决方案：
+在/etc/profile(全局配置)中设置less的字符编码为utf-8
+export LESSCHARSET=utf-8
+
+其他情况：
+如果不能解决，locale一下看看字符编码是否为utf-8，似乎要一致(?)
