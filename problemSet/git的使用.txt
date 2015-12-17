@@ -1,0 +1,105 @@
+查看帮助手册：git --help [add/commit/……]
+创建版本库的步骤：
+	1、创建一个空目录
+	2、通过git init命令把这个目录变成Git可以管理的仓库
+		即，在该目录内使用 git init 
+		此时，在该目录下会自动生成一个.git的文件，用于跟踪管理该版本库（不要修改该文件）
+	（注意：git只能跟踪文本文件，而二进制文件如microsoft word文档，只能知道它改变了大小，而不知道它改变了什么内容；另外，不要使用windows自带的文本编辑器来修改文件，因为会添加BOM头）
+
+把一个文件放进git仓库的步骤：
+	1、git add 文件名，将文件添加到仓库（的暂存区）
+	2、git commit -m "此版本的一些参考信息，务必填写"，将暂存区中的所有修改过的文件提交到仓库
+
+查看当前版本库的状态（提交情况、跟踪情况）：git status
+
+查看仓库当前的具体修改：
+	（首先注意：版本库中的文件有3种状态，working tree表示当前目录内的文件，index files/stage表示暂存区，commit/tree表示提交了的文件；另外，git为我们自动创建了第一个分支master，以及指向master的一个指针HEAD，参考链接：http://www.liaoxuefeng.com/files/attachments/001384907702917346729e9afbf4127b6dfbae9207af016000/0）
+	git diff [--] [文件名]：working tree 和 index files的区别
+	git diff HEAD：working tree 和 tree的区别
+	git diff --cached：index files 和 tree的区别
+	参考链接：http://blog.sina.com.cn/s/blog_40e9d4dd0100xi8p.html
+
+查看仓库的历史记录：git log，精简版的显示：git log --pretty=oneline
+（可以看到一长串的字符串，就是版本号，由于分布式版本控制，所以版本不能从1开始自增）
+
+回退到某一个版本：git reset --hard 版本号或HEAD^/HEAD^^……
+（HEAD^表示当前版本的前一个版本，HEAD^^表示前前个版本，以此类推）
+这样的结果就是回退到的版本之后的版本会从log中消失，想要回退到“未来”的某一个版本，则需要知道它的版本号，可以通过git reflog查看，然后同样用git reset --hard 版本号（版本号可以只写前面几位，git会自动查找到对应的独一无二的版本号）
+
+撤销更改：git checkout -- 文件名（注意空格）
+使working tree中的某个文件回到上一次git add 或 git commit的状态
+有两种情况：
+	1、该文件自修改后还没有被提交到暂存区（可视为暂存区为空），此时使用checkout，则把文件恢复到HEAD版本
+	2、该文件提交到暂存区后进行了二次修改（暂存区含有该文件的内容了），此时使用checkout，则把文件恢复到暂存区的版本
+
+当发现错误的更改已经提交到了暂存区中，可以使用git reset HEAD 文件名，将暂存区的修改回退到working tree中（此处的git reset HEAD 文件名，是表示清空暂存区，然后回退add），如果要丢弃工作区的修改，则使用git checkout --文件名
+
+删除文件：git rm 文件名
+使用后需要commit方可真正从版本库中删除该文件，如果working tree中误删了某个文件，可以先清空暂存区，用git checkout -- 文件名寻回
+
+创建github版本库并关联：参考图形界面。。
+每当本地做了修改之后，都可以用git push origin master把本地master分支的最新修改推送至github
+具体命令：
+关联远程库：git remote add origin git@github.com:path/repo-name.git
+推送最新更新：git push origin master
+
+克隆版本库：git clone git@github.com:path/repo-name.git
+会把文件夹也克隆下来，所以不用新建一个文件夹了
+
+以上的地址是ssh协议的（git://），除此之外还可以使用https等其他协议，但是https除了速度慢以外，每次推送都必须输入口令。ssh支持原生的git协议，速度最快。
+
+分支管理：
+
+创建并切换分支：git checkout -b 分支名
+相当于两条命令：
+git branch 分支名
+git checkout 分支名
+查看分支列表以及当前分支：git branch
+
+合并分支：git merge 要合并过来的分支名
+
+删除分支：git branch -d 分支名
+
+因为创建、合并和删除分支非常快，所以Git鼓励你使用分支完成某个任务，合并后再删掉分支，这和直接在master分支上工作效果是一样的，但过程更安全。
+当合并出现冲突的时候，需要先解决冲突，然后重新用add和commit完成提交
+git log --graph --pretty=oneline --abbrev-commit  可以查看分支合并情况
+
+通常，合并分支的时候，git会尽可能的用fast forward模式（即将指针直接指向某一个最新的节点），这样的话，当删除分支后，该分支的信息就会丢失。
+如果强制禁止fast forward模式，git则会生成一个新的commit，这样就可以从分支历史上看到分支的信息了
+所以，合并分支的较优方法是：
+git merge --no-ff -m "信息" 分支名
+查看分支结构的方法是：
+git log --graph --pretty=oneline --abbrev-commit
+
+bug分支：通常应用在开发过程中，突然接到另一个bug急需修复时，这时如果直接git checkout otherbranch，会报错，提示如果没有保存修改过的文件，它可能会被另外的分支覆盖掉。故，需要使用git stash来保存现场。
+保存现场：git stash
+查看工作现场的保存列表：git stash list
+恢复现场（但不删除现场列表）：git stash apply [现场名，可以从list中查看，默认不写的话是表示最新的一个现场]
+删除现场列表：git stash drop
+恢复现场并删除现场列表：git stash pop
+
+抓取分支：
+默认git clone下来的版本只能看到master分支，如果要在dev分支下工作，就必须创建远程origin的dev分支到本地
+git checkout -b dev origin/dev
+这样就生成了dev分支，然后就可以进行修改和提交了
+
+远程库比当前库版本新，出现冲突：
+如上面的例子，先用git pull把最新的提交从origin/dev抓下来，然后在本地合并，解决冲突再推送
+（关于git pull可以参考的链接：http://www.yiibai.com/git/git_pull.html）
+建立本地分支和远程分支的关联，使用git branch --set-upstream branch-name origin/branch-name
+
+分支标签：
+在当前分支下的HEAD版本设置标签：git tag 标签名
+查看所有标签：git tag（按标签的字母排序分行显示）
+为之前的版本补打标签：git tag 标签名 版本号
+（版本号用 git log --pretty-oneline abbrev-commit可以查看到）
+查看某个标签的详细信息：git show 标签名
+创建带有说明的标签：git tag -a 标签名 -m "信息" [版本号]
+删除标签：git tag -d 标签名
+推送某个标签到远程：git push origin 标签名
+推送所有标签到远程：git push origin --tags
+删除远程的标签：首先删除本地的标签，然后git push origin :refs/tags/标签名
+
+
+
+
